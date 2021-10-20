@@ -9,89 +9,92 @@ import {
   QuerySnapshot,
   Unsubscribe,
 } from '@angular/fire/firestore';
+import { select, Store } from '@ngrx/store';
 
-import { Subject } from 'rxjs';
+import { AppStateInterface } from '../appState.interface';
 import { UIService } from '../shared/iu.service';
+import { startLoadingAction, stopLoadingAction } from '../shared/store/actions';
 import { Exercise } from './exercise.model';
+import {
+  setAvailableTrainingsAction,
+  setFinishedTrainingsAction,
+  startTrainingAction,
+  stopTrainingsAction,
+} from './store/actions';
+import { activeTrainingSelector } from './store/selectors';
+import { take } from 'rxjs/operators';
 
 @Injectable()
 export class TrainingService {
-  exerciseChanged = new Subject<Exercise | null>();
-  exercisesChanged = new Subject<Exercise[]>();
-  finishedExercisesChanged = new Subject<Exercise[]>();
-  private availableExercises: Exercise[] = [];
-  private runningExercise!: Exercise | null;
-  private finishedExercises: Exercise[] = [];
   private fbSubs: Unsubscribe[] = [];
 
-  constructor(private firestore: Firestore, private uiService: UIService) {}
+  constructor(
+    private firestore: Firestore,
+    private uiService: UIService,
+    private store: Store<AppStateInterface>
+  ) {}
 
   fetchAvailableExercises() {
-    this.uiService.loadingStateChanged.next(true);
+    this.store.dispatch(startLoadingAction());
     const db = collection(this.firestore, 'availableExercises');
     const availableExercises: Unsubscribe = onSnapshot(
       db,
       (snapshot) => {
-        this.availableExercises = this.getExercisesFromSnapshot(snapshot);
-        this.uiService.loadingStateChanged.next(false);
-        this.exercisesChanged.next([...this.availableExercises]);
+        const availableExercises = {
+          availableExercises: this.getExercisesFromSnapshot(snapshot),
+        };
+        this.store.dispatch(stopLoadingAction());
+        this.store.dispatch(setAvailableTrainingsAction(availableExercises));
       },
       (error) => {
-        this.uiService.loadingStateChanged.next(false);
+        this.store.dispatch(stopLoadingAction());
         this.uiService.showSnackbar(
           'Fetching Exercises failed, please try again later',
           undefined,
           3000
         );
-        this.exerciseChanged.next(null);
       }
     );
     this.fbSubs.push(availableExercises);
-    return availableExercises;
   }
 
   startExercise(selectedId: string) {
-    const selectedExercise = this.availableExercises.find(
-      (ex) => ex.id === selectedId
-    );
-    this.runningExercise = selectedExercise!;
-    this.exerciseChanged.next({ ...this.runningExercise });
+    this.store.dispatch(startTrainingAction({ activetrainingId: selectedId }));
   }
 
   completeExercise() {
-    this.addDataToDataase({
-      ...this.runningExercise!,
-      date: new Date(),
-      state: 'completed',
+    this.store.pipe(select(activeTrainingSelector), take(1)).subscribe((ex) => {
+      this.addDataToDataase({
+        ...ex!,
+        date: new Date(),
+        state: 'completed',
+      });
+      this.store.dispatch(stopTrainingsAction());
     });
-    this.runningExercise = null;
-    this.exerciseChanged.next(null);
   }
 
   cancelExercise(progress: number) {
-    this.addDataToDataase({
-      ...this.runningExercise!,
-      duration: this.runningExercise!.duration * (progress / 100),
-      calories: this.runningExercise!.calories * (progress / 100),
-      date: new Date(),
-      state: 'cancelled',
+    this.store.pipe(select(activeTrainingSelector), take(1)).subscribe((ex) => {
+      this.addDataToDataase({
+        ...ex!,
+        duration: ex!.duration * (progress / 100),
+        calories: ex!.calories * (progress / 100),
+        date: new Date(),
+        state: 'cancelled',
+      });
+      this.store.dispatch(stopTrainingsAction());
     });
-    this.runningExercise = null;
-    this.exerciseChanged.next(null);
-  }
-
-  getRunningExercise() {
-    return { ...this.runningExercise };
   }
 
   fetchCompletedOrCancelledExercises() {
     const db = collection(this.firestore, 'finishedExercises');
     const availableExercises: Unsubscribe = onSnapshot(db, (snapshot) => {
-      this.finishedExercises = this.getExercisesFromSnapshot(snapshot);
-      this.finishedExercisesChanged.next([...this.finishedExercises]);
+      const finishedExercises = {
+        finishedAExercises: this.getExercisesFromSnapshot(snapshot),
+      };
+      this.store.dispatch(setFinishedTrainingsAction(finishedExercises));
     });
     this.fbSubs.push(availableExercises);
-    return availableExercises;
   }
 
   cancelSubscriptions() {
@@ -103,7 +106,9 @@ export class TrainingService {
     addDoc(db, exercise);
   }
 
-  private getExercisesFromSnapshot(snapshot: QuerySnapshot<DocumentData>) {
+  private getExercisesFromSnapshot(
+    snapshot: QuerySnapshot<DocumentData>
+  ): Exercise[] {
     return snapshot.docs.map((doc) => {
       return {
         id: doc.id,

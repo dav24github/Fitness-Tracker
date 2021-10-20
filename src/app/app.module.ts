@@ -15,9 +15,9 @@ import { AuthService } from './auth/auth.service';
 import { TrainingService } from './training/training.service';
 import { environment } from 'src/environments/environment';
 import { UIService } from './shared/iu.service';
-import { TrainingModule } from './training/training.module';
 import { AuthModule } from './auth/auth.module';
 import { StoreModule } from '@ngrx/store';
+import { reducers } from './app.reducer';
 
 @NgModule({
   declarations: [
@@ -34,8 +34,8 @@ import { StoreModule } from '@ngrx/store';
     FlexLayoutModule,
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideFirestore(() => getFirestore()),
-    TrainingModule,
     AuthModule,
+    StoreModule.forRoot(reducers),
   ],
   providers: [AuthService, TrainingService, UIService],
   bootstrap: [AppComponent],

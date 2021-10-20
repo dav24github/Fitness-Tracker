@@ -1,16 +1,12 @@
-import {
-  AfterViewInit,
-  Component,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { Unsubscribe } from '@firebase/firestore';
-import { Subscription } from 'rxjs';
+import { select, Store } from '@ngrx/store';
+import { AppStateInterface } from 'src/app/appState.interface';
 import { Exercise } from '../exercise.model';
+import { finishedExercisesSelector } from '../store/selectors';
 import { TrainingService } from '../training.service';
 
 @Component({
@@ -18,39 +14,29 @@ import { TrainingService } from '../training.service';
   templateUrl: './past-training.component.html',
   styleUrls: ['./past-training.component.css'],
 })
-export class PastTrainingComponent implements OnInit, AfterViewInit, OnDestroy {
+export class PastTrainingComponent implements OnInit, AfterViewInit {
   displayedColumns = ['date', 'name', 'duration', 'calories', 'state'];
   dataSource = new MatTableDataSource<Exercise>();
-  private exChangedSubscription!: Subscription;
-
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-  unSubscribe!: Unsubscribe;
 
-  constructor(private trainingService: TrainingService) {}
+  constructor(
+    private trainingService: TrainingService,
+    private store: Store<AppStateInterface>
+  ) {}
 
   ngOnInit(): void {
-    this.exChangedSubscription =
-      this.trainingService.finishedExercisesChanged.subscribe((exercises) => {
+    this.store
+      .pipe(select(finishedExercisesSelector))
+      .subscribe((exercises: Exercise[]) => {
         this.dataSource.data = exercises;
       });
-
-    this.unSubscribe =
-      this.trainingService.fetchCompletedOrCancelledExercises();
+    this.trainingService.fetchCompletedOrCancelledExercises();
   }
 
   ngAfterViewInit(): void {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
-  }
-
-  ngOnDestroy(): void {
-    if (this.exChangedSubscription) {
-      this.exChangedSubscription.unsubscribe();
-    }
-    if (this.unSubscribe) {
-      this.unSubscribe();
-    }
   }
 
   doFilter(filterValue: any) {

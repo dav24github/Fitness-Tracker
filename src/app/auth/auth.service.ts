@@ -10,31 +10,38 @@ import {
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
+import { AppStateInterface } from '../appState.interface';
 import { UIService } from '../shared/iu.service';
+import { startLoadingAction, stopLoadingAction } from '../shared/store/actions';
 import { TrainingService } from '../training/training.service';
 import { AuthData } from './auth-data.model';
+import {
+  setAuthenticatedAction,
+  setUnautheticatedActions,
+} from './store/actions';
 
 @Injectable()
 export class AuthService {
   authChange = new Subject<boolean>();
-  private isAuthenticated = false;
 
   constructor(
     private router: Router,
     private auth: Auth,
     private trainingService: TrainingService,
-    private uiService: UIService
+    private uiService: UIService,
+    private store: Store<AppStateInterface>
   ) {}
 
   initAuthListener() {
     onAuthStateChanged(this.auth, (user) => {
       if (user) {
-        this.isAuthenticated = true;
+        this.store.dispatch(setAuthenticatedAction());
         this.authChange.next(true);
         this.router.navigate(['/training']);
       } else {
-        this.isAuthenticated = false;
+        this.store.dispatch(setUnautheticatedActions());
         this.authChange.next(false);
         this.trainingService.cancelSubscriptions();
         this.router.navigate(['/login']);
@@ -43,34 +50,36 @@ export class AuthService {
   }
 
   registerUser(authData: AuthData) {
-    this.uiService.loadingStateChanged.next(true);
+    // this.uiService.loadingStateChanged.next(true);
+    this.store.dispatch(startLoadingAction());
     createUserWithEmailAndPassword(this.auth, authData.email, authData.password)
       .then((result) => {
-        this.uiService.loadingStateChanged.next(false);
+        // this.uiService.loadingStateChanged.next(false);
+        this.store.dispatch(stopLoadingAction());
       })
       .catch((error) => {
-        this.uiService.loadingStateChanged.next(false);
+        // this.uiService.loadingStateChanged.next(false);
+        this.store.dispatch(stopLoadingAction());
         this.uiService.showSnackbar(error.message, undefined, 3000);
       });
   }
 
   login(authData: AuthData) {
-    this.uiService.loadingStateChanged.next(true);
+    // this.uiService.loadingStateChanged.next(true);
+    this.store.dispatch(startLoadingAction());
     signInWithEmailAndPassword(this.auth, authData.email, authData.password)
       .then((result) => {
         // this.uiService.loadingStateChanged.next(false);
+        // this.store.dispatch(stopLoadingAction())
       })
       .catch((error) => {
-        this.uiService.loadingStateChanged.next(false);
+        // this.uiService.loadingStateChanged.next(false);
+        this.store.dispatch(stopLoadingAction());
         this.uiService.showSnackbar(error.message, undefined, 3000);
       });
   }
 
   logout() {
     signOut(this.auth);
-  }
-
-  isAuth() {
-    return this.isAuthenticated;
   }
 }
