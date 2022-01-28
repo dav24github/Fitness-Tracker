@@ -5,15 +5,13 @@
 export const environment = {
   production: false,
   firebaseConfig: {
-    apiKey: 'AIzaSyD5ie_Dd5YALFOCZz3qGTfsqH9c3Tz7rj0',
-    authDomain: 'ng-course-recipe-book-eefb2.firebaseapp.com',
-    databaseURL:
-      'https://ng-course-recipe-book-eefb2-default-rtdb.firebaseio.com',
-    projectId: 'ng-course-recipe-book-eefb2',
-    storageBucket: 'ng-course-recipe-book-eefb2.appspot.com',
-    messagingSenderId: '671972182904',
-    appId: '1:671972182904:web:7906e4a9eebab531e7168d',
-    measurementId: 'G-DLH2MGNJM3',
+    apiKey: 'AIzaSyD4a1KVZWeqdFNIloPx36vb0joJ5e_Vv0s',
+    authDomain: 'angular-projects-davidesossa.firebaseapp.com',
+    projectId: 'angular-projects-davidesossa',
+    storageBucket: 'angular-projects-davidesossa.appspot.com',
+    messagingSenderId: '321085941988',
+    appId: '1:321085941988:web:59125c08610b84f583e4f1',
+    measurementId: 'G-L6WJCEB4TM',
   },
 };
 
