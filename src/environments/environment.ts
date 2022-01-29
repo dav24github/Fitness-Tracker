@@ -5,13 +5,14 @@
 export const environment = {
   production: false,
   firebaseConfig: {
-    apiKey: 'AIzaSyD4a1KVZWeqdFNIloPx36vb0joJ5e_Vv0s',
-    authDomain: 'angular-projects-davidesossa.firebaseapp.com',
-    projectId: 'angular-projects-davidesossa',
-    storageBucket: 'angular-projects-davidesossa.appspot.com',
-    messagingSenderId: '321085941988',
-    appId: '1:321085941988:web:59125c08610b84f583e4f1',
-    measurementId: 'G-L6WJCEB4TM',
+    apiKey: 'AIzaSyCGOlayBOd1m2nCeXS01-kyG0j6oxYzt94',
+    authDomain: 'ang-projects-davide.firebaseapp.com',
+    databaseURL: 'https://ang-projects-davide-default-rtdb.firebaseio.com',
+    projectId: 'ang-projects-davide',
+    storageBucket: 'ang-projects-davide.appspot.com',
+    messagingSenderId: '478952149095',
+    appId: '1:478952149095:web:8608b172b7742d41f784c2',
+    measurementId: 'G-HT1BW9SP0M',
   },
 };
 
