@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "ang-projects-davide"
+  },
+  "targets": {
+    "ang-projects-davide": {
+      "hosting": {
+        "fitness": [
+          "fitness-ang-projects-davide"
+        ]
+      }
+    }
+  }
+}
